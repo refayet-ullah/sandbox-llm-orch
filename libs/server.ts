@@ -4,6 +4,11 @@ import axios from "axios";
 import dotenv from "dotenv";
 dotenv.config();
 
+// Added following 3 components from the SDK to make MCP bridge
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import { ListResourcesRequest, ReadResourceRequest } from '@modelcontextprotocol/sdk/types.js';
+
 const app = express();
 const PORT = process.env.PORT || 8000;
 
@@ -11,8 +16,42 @@ const PORT = process.env.PORT || 8000;
 app.use(cors());
 app.use(express.json()); // for parsing application/json
 
-// Configuration (very important! This is the URL of your Python server)
+// Configuration (very important! This is the URL of LLM Server in Python)
 const LLM_SERVER_URL = "http://localhost:8001/v1/completions";
+
+// NEW FUNCTION: Get content from the MCP server
+async function getContentFromMcp(filePath: string): Promise<string> {
+  let client: Client | undefined;
+  try {
+    // Define the transport (how we talk to the server) and the client
+    const transport = new StdioClientTransport({
+      command: 'npx',
+      args: ['-y', '@modelcontextprotocol/server-filesystem', '/home/refayet/dev/theRoot/proto/sandbox-llm-orch/libs/local-data-src'], // USE SAME PATH AS IN mcp-config.json
+    });
+    client = new Client({ transport });
+    
+    // Connect to the MCP server
+    await client.connect();
+    console.log('Connected to MCP Filesystem server');
+
+    // Create a request to read a specific resource (file)
+    // The Filesystem server uses a URL-like format: `file://` + full path
+    const request: ReadResourceRequest = {
+      uri: `file://${filePath}`,
+    };
+    
+    const response = await client.request(request);
+    // The content is in the response.contents array, usually as text
+    return response.contents[0]?.text || '';
+
+  } catch (error) {
+    console.error('Error calling MCP Server:', error);
+    return ''; // Return empty string if there's an error
+  } finally {
+    // Always close the connection
+    await client?.close();
+  }
+}
 
 // Basic health check endpoint
 app.get("/health", (req, res) => {

@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "fs": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-filesystem",
+        "/home/refayet/dev/theRoot/proto/sandbox-llm-orch/libs/local-data-src"
+      ]
+    }
+  }
+}

@@ -11,6 +11,8 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.18.1",
+    "@modelcontextprotocol/server-filesystem": "^2025.8.21",
     "axios": "^1.12.1",
     "cors": "^2.8.5",
     "dotenv": "^17.2.2",
